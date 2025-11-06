@@ -1,0 +1,14 @@
+[
+  {
+    "source": "data\\README.txt",
+    "chunk": 0
+  },
+  {
+    "source": "data\\sdu_course.txt",
+    "chunk": 0
+  },
+  {
+    "source": "data\\sdu_info.pdf",
+    "chunk": 0
+  }
+]

@@ -1,0 +1,1 @@
+Place your documents (PDF, TXT, MD, DOCX) in this folder and run: python rag_cli.py ingest --source_dir data Then query: python rag_cli.py query --k 3 "Your question"

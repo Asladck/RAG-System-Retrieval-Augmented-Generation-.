@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+.python-version
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+
+# Virtualenv Windows scripts
+venv\Scripts/
+venv\
+
+# Environment / secrets
+.env
+.env.*
+*.env
+secrets.*
+*.key
+
+# Models / caches / large artifacts
+models/
+*/models/
+*.pt
+*.bin
+*.ckpt
+*.onnx
+*.tar.gz
+transformers_cache/
+hf_cache/
+cache/
+cache_*/
+faiss_index/
+*.index
+*.sqlite3
+*.db
+
+# Data directory (ignore by default, keep README)
+data/
+!data/README.txt
+
+# C / C++ build artifacts
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.out
+*.a
+*.lib
+*.lo
+*.la
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+
+# IntelliJ / VSCode
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary
+*.log
+*.tmp
+*.swp
