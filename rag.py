@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 import pdfplumber
 import docx
 import requests
+from dotenv import load_dotenv
 
 try:
     import faiss
@@ -16,10 +17,9 @@ except Exception:
 
 
 OLLAMA_DEFAULT_HOST = "http://127.0.0.1:11434"
-
+load_dotenv()
 
 def generate_with_ollama(prompt: str, model: str = "llama3", max_tokens: int = 512, temperature: float = 0.0, host: Optional[str] = None) -> str:
-    """Send prompt to local Ollama HTTP API (/api/generate). Handles streaming JSON lines."""
     import json
 
     host = host or os.environ.get("OLLAMA_HOST") or OLLAMA_DEFAULT_HOST
@@ -54,7 +54,7 @@ def generate_with_ollama(prompt: str, model: str = "llama3", max_tokens: int = 5
 class Ingestor:
     """Loads documents from a directory, extracts text, chunks, and builds/saves a FAISS index or a numpy-backed index."""
 
-    def __init__(self, source_dir: str, index_path: str = "./index.faiss", embed_model_name: str = "all-MiniLM-L6-v2", chunk_size: int = 500, overlap: int = 50):
+    def __init__(self, source_dir: str, index_path: str = "./index.faiss", embed_model_name: str = "all-MiniLM-L6-v2", chunk_size: int = 80, overlap: int = 15):
         self.source_dir = Path(source_dir)
         self.index_path = Path(index_path)
         self.embed_model_name = embed_model_name
@@ -88,13 +88,24 @@ class Ingestor:
         return " ".join(text.split())
 
     def chunk_text(self, text: str) -> List[str]:
-        tokens = text.split()
+        paragraphs = text.split('\n')
+        paragraphs = [p.strip() for p in paragraphs if p.strip()]
+
         chunks = []
-        i = 0
-        while i < len(tokens):
-            chunk = tokens[i:i + self.chunk_size]
-            chunks.append(" ".join(chunk))
-            i += self.chunk_size - self.overlap
+
+        for paragraph in paragraphs:
+            words = paragraph.split()
+
+            if len(words) <= self.chunk_size:
+                if words:
+                    chunks.append(paragraph)
+                continue
+            for i in range(0, len(words), self.chunk_size - self.overlap):
+                chunk_words = words[i:i + self.chunk_size]
+                if chunk_words:
+                    chunk_text = ' '.join(chunk_words)
+                    chunks.append(chunk_text)
+
         return chunks
 
     def ingest(self):
@@ -192,50 +203,26 @@ class RAGSystem:
 
     def answer(self, query: str, k: int = 3) -> str:
         results = self.retrieve(query, k)
-        # if retrieved results are empty or contain only placeholders, indicate no relevant info
         if not results:
             return "Answer:\n(No relevant documents found)\n\nSources:\n- none"
         context = "\n\n".join([r[2] for r in results])
-        # simple heuristic: if context is just placeholders, respond accordingly
         if all((txt.startswith('See ') or txt.strip() == '') for (_, _, txt) in results):
             return "Answer:\n(No relevant documents found)\n\nSources:\n" + "\n".join([f"- {r[1].get('source')} (chunk {r[1].get('chunk')})" for r in results])
         sources = [r[1] for r in results]
 
-        use_ollama = os.environ.get("USE_OLLAMA") == "1" or os.environ.get("OLLAMA_HOST") is not None
-        api_key = os.environ.get("OPENAI_API_KEY")
+        use_ollama = os.environ.get("USE_OLLAMA") == "1" or os.environ.get("USE_OLLAMA") == "true"
+        if not use_ollama and os.environ.get("OLLAMA_HOST"):
+            use_ollama = True
 
         ans = None
         if use_ollama:
-            prompt = f"Answer the question based on the context. Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
-            ans = generate_with_ollama(prompt, model=os.environ.get("OLLAMA_MODEL", "llama3"), max_tokens=512, temperature=0.0)
-            if ans.startswith("(Ollama error") or ans.startswith("(Ollama returned"):
-                ans = None
+            prompt = f"Answer in one short sentence based on context; if not found, say 'I don't know'. Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
+            ans = generate_with_ollama(prompt, model=os.environ.get("OLLAMA_MODEL", "llama3"), max_tokens=512, temperature=0.0, host=os.environ.get("OLLAMA_HOST"))
 
-        if ans is None and api_key:
-            try:
-                import openai
-                openai.api_key = api_key
-                prompt = f"Answer the question based on the context. Context:\n{context}\n\nQuestion: {query}\n\nAnswer:"
-                resp = openai.Completion.create(engine="text-davinci-003", prompt=prompt, max_tokens=300)
-                ans = resp.choices[0].text.strip()
-            except Exception as e:
-                ans = None
+        if ans and not ans.startswith("(Ollama") and ans.strip():
+            src_text = "\n".join([f"- {s.get('source')} (chunk {s.get('chunk')})" for s in sources])
+            return f"Answer:\n{ans}\n\nSources:\n{src_text} \n Original context used:\n{context}"
 
-        if ans is None:
-            try:
-                from transformers import T5ForConditionalGeneration, T5Tokenizer
-                model_name = "t5-small"
-                tok = T5Tokenizer.from_pretrained(model_name)
-                m = T5ForConditionalGeneration.from_pretrained(model_name)
-                input_text = f"context: {context} \n question: {query}"
-                input_ids = tok.encode(input_text, return_tensors="pt", truncation=True, max_length=512)
-                out = m.generate(input_ids, max_length=150)
-                ans = tok.decode(out[0], skip_special_tokens=True)
-            except Exception as e:
-                ans = "(Local LLM unavailable or failed: returning retrieved context)\n\n" + context
-
-        if not ans or not ans.strip():
-            ans = "(No answer generated by model)"
-
+        ans = "(Answer based on retrieved documents but no LLM processing available)"
         src_text = "\n".join([f"- {s.get('source')} (chunk {s.get('chunk')})" for s in sources])
-        return f"Answer:\n{ans}\n\nSources:\n{src_text}"
+        return f"Answer:\n{ans}\n\nSources:\n{src_text} \n Original context used:\n{context}"

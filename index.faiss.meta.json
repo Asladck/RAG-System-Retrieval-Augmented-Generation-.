@@ -1,14 +1,74 @@
 [
   {
-    "source": "data\\README.txt",
+    "source": "data\\data_mine.txt",
     "chunk": 0
   },
   {
-    "source": "data\\sdu_course.txt",
+    "source": "data\\data_mine.txt",
+    "chunk": 1
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 2
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 3
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 4
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 5
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 6
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 7
+  },
+  {
+    "source": "data\\data_mine.txt",
+    "chunk": 8
+  },
+  {
+    "source": "data\\data_mine2.pdf",
     "chunk": 0
   },
   {
-    "source": "data\\sdu_info.pdf",
-    "chunk": 0
+    "source": "data\\data_mine2.pdf",
+    "chunk": 1
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 2
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 3
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 4
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 5
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 6
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 7
+  },
+  {
+    "source": "data\\data_mine2.pdf",
+    "chunk": 8
   }
 ]
