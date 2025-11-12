@@ -44,9 +44,6 @@ faiss_index/
 *.sqlite3
 *.db
 
-# Data directory (ignore by default, keep README)
-data/
-!data/README.txt
 
 # C / C++ build artifacts
 *.o

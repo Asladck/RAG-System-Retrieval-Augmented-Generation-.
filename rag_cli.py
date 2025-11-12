@@ -17,7 +17,6 @@ def main():
     p_query.add_argument("--index_path", default="./index.faiss")
     p_query.add_argument("query", nargs="+", help="Question to ask")
 
-    # НОВАЯ КОМАНДА: debug
     p_debug = sub.add_parser("debug", help="Debug the index")
     p_debug.add_argument("--index_path", default="./index.faiss")
     p_debug.add_argument("search_term", help="Search term to find in chunks")
